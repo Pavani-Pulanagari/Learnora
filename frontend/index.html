@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Learnora — Learn Anything</title>
+
+    <meta
+        name="description"
+        content="Learnora is an evidence-grounded AI learning companion."
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         BACKGROUND
+    ====================================================== -->
+
+    <div class="background-glow glow-one"></div>
+
+    <div class="background-glow glow-two"></div>
+
+
+    <!-- =====================================================
+         NAVIGATION
+    ====================================================== -->
+
+    <header class="navbar">
+
+        <div class="nav-inner">
+
+            <a
+                href="#top"
+                class="brand"
+            >
+
+                <div class="brand-mark">
+                    L
+                </div>
+
+                <span>
+                    Learnora
+                </span>
+
+            </a>
+
+
+            <nav class="nav-links">
+
+                <button
+                    type="button"
+                    onclick="scrollToSection('learn-section')"
+                >
+                    Learn
+                </button>
+
+                <button
+                    type="button"
+                    onclick="scrollToSection('knowledge-section')"
+                >
+                    Knowledge Base
+                </button>
+
+            </nav>
+
+
+            <div class="local-status">
+
+                <span class="status-dot"></span>
+
+                <span>
+                    Local AI
+                </span>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <main id="top">
+
+
+        <!-- =================================================
+             HERO / LEARN
+        ================================================== -->
+
+        <section
+            id="learn-section"
+            class="hero-section"
+        >
+
+            <div class="hero-content">
+
+
+                <div class="eyebrow">
+
+                    <span class="eyebrow-icon">
+                        ✦
+                    </span>
+
+                    Evidence-grounded learning
+
+                </div>
+
+
+                <h1>
+
+                    Learn anything.
+                    <br>
+
+                    <span>
+                        Understand it deeply.
+                    </span>
+
+                </h1>
+
+
+                <p class="hero-description">
+
+                    Ask one question and get a structured
+                    learning experience powered by your
+                    own verified knowledge.
+
+                </p>
+
+
+
+                <!-- QUESTION BOX -->
+
+                <div class="question-card">
+
+                    <textarea
+                        id="topic"
+                        rows="3"
+                        placeholder="Explain: what is a Python loop?"
+                        aria-label="Enter your question"
+                    ></textarea>
+
+
+                    <div class="question-footer">
+
+                        <div class="shortcut">
+
+                            <span>
+                                Ctrl
+                            </span>
+
+                            <span>
+                                Enter
+                            </span>
+
+                            <small>
+                                to learn
+                            </small>
+
+                        </div>
+
+
+                        <button
+                            id="teachButton"
+                            class="teach-button"
+                            type="button"
+                        >
+
+                            <span>
+                                Teach me
+                            </span>
+
+                            <span class="button-arrow">
+                                →
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- CONTROLS -->
+
+                <div class="controls">
+
+
+                    <div class="control-group">
+
+                        <label for="language">
+                            Language
+                        </label>
+
+                        <div class="input-wrap">
+
+                            <span class="input-icon">
+                                A
+                            </span>
+
+                            <input
+                                id="language"
+                                type="text"
+                                value="auto"
+                                placeholder="Auto-detect"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="control-group">
+
+                        <label for="level">
+                            Learning level
+                        </label>
+
+                        <div class="input-wrap">
+
+                            <span class="input-icon">
+                                ◈
+                            </span>
+
+                            <select id="level">
+
+                                <option value="beginner">
+                                    Beginner
+                                </option>
+
+                                <option value="intermediate">
+                                    Intermediate
+                                </option>
+
+                                <option value="advanced">
+                                    Advanced
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="control-group">
+
+                        <label for="country">
+                            Country / region
+                        </label>
+
+                        <div class="input-wrap">
+
+                            <span class="input-icon">
+                                ◎
+                            </span>
+
+                            <input
+                                id="country"
+                                type="text"
+                                placeholder="Optional"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="hero-note">
+
+                    <span>
+                        🔒
+                    </span>
+
+                    Your uploaded knowledge stays local during development.
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             LOADING
+        ================================================== -->
+
+        <section
+            id="loading"
+            class="loading-section hidden"
+        >
+
+            <div class="loading-card">
+
+                <div class="loader"></div>
+
+                <div>
+
+                    <strong>
+                        Building your lesson
+                    </strong>
+
+                    <p>
+                        Searching your knowledge and checking evidence...
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             RESULT
+        ================================================== -->
+
+        <section
+            id="result"
+            class="result-section hidden"
+        >
+
+            <div class="result-container">
+
+
+                <!-- RESULT HEADER -->
+
+                <div class="result-header">
+
+                    <div>
+
+                        <div class="result-label">
+                            YOUR LEARNORA LESSON
+                        </div>
+
+                        <h2 id="resultTopic">
+                            Your lesson
+                        </h2>
+
+                    </div>
+
+
+                    <div
+                        id="languageBadge"
+                        class="language-badge"
+                    >
+                        Auto
+                    </div>
+
+                </div>
+
+
+
+                <!-- UNCERTAINTY -->
+
+                <div
+                    id="uncertainty"
+                    class="uncertainty hidden"
+                >
+
+                    <div class="uncertainty-icon">
+                        !
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Evidence limitation
+                        </strong>
+
+                        <p id="uncertaintyText"></p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- CONCEPT -->
+
+                <article class="lesson-card concept-card">
+
+                    <div class="section-number">
+                        01
+                    </div>
+
+                    <div class="lesson-content">
+
+                        <div class="section-heading">
+
+                            <span class="section-icon">
+                                ◇
+                            </span>
+
+                            <h3>
+                                Concept
+                            </h3>
+
+                        </div>
+
+                        <p id="explanation"></p>
+
+                    </div>
+
+                </article>
+
+
+
+                <!-- WHY IT MATTERS -->
+
+                <article class="lesson-card">
+
+                    <div class="section-number">
+                        02
+                    </div>
+
+                    <div class="lesson-content">
+
+                        <div class="section-heading">
+
+                            <span class="section-icon">
+                                ✦
+                            </span>
+
+                            <h3>
+                                Why it matters
+                            </h3>
+
+                        </div>
+
+                        <p id="whyMatters"></p>
+
+                    </div>
+
+                </article>
+
+
+
+                <!-- REAL WORLD -->
+
+                <article class="lesson-card">
+
+                    <div class="section-number">
+                        03
+                    </div>
+
+                    <div class="lesson-content">
+
+                        <div class="section-heading">
+
+                            <span class="section-icon">
+                                ◎
+                            </span>
+
+                            <h3>
+                                Real world
+                            </h3>
+
+                        </div>
+
+                        <div
+                            id="realWorld"
+                            class="lesson-list"
+                        ></div>
+
+                    </div>
+
+                </article>
+
+
+
+                <!-- EXAMPLES -->
+
+                <article class="lesson-card">
+
+                    <div class="section-number">
+                        04
+                    </div>
+
+                    <div class="lesson-content">
+
+                        <div class="section-heading">
+
+                            <span class="section-icon">
+                                ◌
+                            </span>
+
+                            <h3>
+                                Examples
+                            </h3>
+
+                        </div>
+
+                        <div
+                            id="examples"
+                            class="lesson-list"
+                        ></div>
+
+                    </div>
+
+                </article>
+
+
+
+                <!-- COMMON MISTAKES -->
+
+                <article class="lesson-card">
+
+                    <div class="section-number">
+                        05
+                    </div>
+
+                    <div class="lesson-content">
+
+                        <div class="section-heading">
+
+                            <span class="section-icon">
+                                ⚠
+                            </span>
+
+                            <h3>
+                                Common mistakes
+                            </h3>
+
+                        </div>
+
+                        <div
+                            id="mistakes"
+                            class="lesson-list"
+                        ></div>
+
+                    </div>
+
+                </article>
+
+
+
+                <!-- PRACTICE -->
+
+                <article class="practice-card">
+
+                    <div class="practice-top">
+
+                        <span class="practice-star">
+                            ✦
+                        </span>
+
+                        <span>
+                            Check your understanding
+                        </span>
+
+                    </div>
+
+                    <h3 id="practice">
+                        Try explaining the concept in your own words.
+                    </h3>
+
+                </article>
+
+
+
+                <!-- SOURCES -->
+
+                <article class="sources-card">
+
+                    <div class="sources-header">
+
+                        <div>
+
+                            <span class="source-label">
+                                EVIDENCE
+                            </span>
+
+                            <h3>
+                                Sources & evidence
+                            </h3>
+
+                        </div>
+
+                        <span
+                            id="sourceCount"
+                            class="source-count"
+                        >
+                            0 sources
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        id="groundingStatus"
+                        class="grounding-status"
+                    >
+
+                        <span class="grounding-check">
+                            ✓
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Evidence retrieved
+                            </strong>
+
+                            <p>
+                                This lesson was generated using
+                                information retrieved from your
+                                knowledge base.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div id="sources"></div>
+
+                </article>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             KNOWLEDGE BASE
+        ================================================== -->
+
+        <section
+            id="knowledge-section"
+            class="knowledge-section"
+        >
+
+            <div class="knowledge-container">
+
+
+                <div class="knowledge-heading">
+
+                    <div>
+
+                        <div class="section-kicker">
+                            YOUR KNOWLEDGE
+                        </div>
+
+                        <h2>
+                            Knowledge Base
+                        </h2>
+
+                        <p>
+                            Give Learnora trusted material to
+                            learn from.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- UPLOAD CARD -->
+
+                <div
+                    id="dropZone"
+                    class="upload-card"
+                >
+
+                    <div class="upload-icon">
+                        ↑
+                    </div>
+
+
+                    <h3>
+                        Add learning materials
+                    </h3>
+
+
+                    <p>
+                        Upload documents that Learnora can
+                        use as verified knowledge.
+                    </p>
+
+
+                    <div class="file-types">
+
+                        <span>
+                            PDF
+                        </span>
+
+                        <span>
+                            DOCX
+                        </span>
+
+                        <span>
+                            TXT
+                        </span>
+
+                        <span>
+                            Markdown
+                        </span>
+
+                    </div>
+
+
+                    <button
+                        id="uploadButton"
+                        class="choose-button"
+                        type="button"
+                    >
+                        Choose files
+                    </button>
+
+
+                    <input
+                        id="fileInput"
+                        type="file"
+                        accept=".txt,.md,.pdf,.docx"
+                        multiple
+                        hidden
+                    />
+
+
+                    <p class="upload-limit">
+                        Maximum file size: 10 MB
+                    </p>
+
+                </div>
+
+
+
+                <!-- UPLOAD STATUS -->
+
+                <div
+                    id="uploadStatus"
+                    class="upload-status hidden"
+                ></div>
+
+
+
+                <!-- SOURCE LIST -->
+
+                <div class="source-list-wrapper">
+
+                    <div class="source-list-header">
+
+                        <h3>
+                            Your sources
+                        </h3>
+
+                        <span>
+                            Local knowledge
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        id="sourceList"
+                        class="source-list"
+                    >
+
+                        <div class="empty-sources">
+
+                            <div>
+                                ◇
+                            </div>
+
+                            <p>
+                                No documents indexed yet.
+                            </p>
+
+                            <span>
+                                Add a document above to get started.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer class="footer">
+
+        <div class="footer-inner">
+
+            <div class="footer-brand">
+
+                <div class="brand-mark">
+                    L
+                </div>
+
+                <span>
+                    Learnora
+                </span>
+
+            </div>
+
+
+            <p>
+                Learn anything. Understand it deeply.
+            </p>
+
+
+            <span class="footer-status">
+
+                Built with local AI
+
+                <span class="status-dot"></span>
+
+            </span>
+
+        </div>
+
+    </footer>
+
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
