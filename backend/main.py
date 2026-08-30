@@ -5,12 +5,24 @@ from pydantic import BaseModel
 from pathlib import Path
 import re
 import json
+import os
 import requests
+
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 from .ingest import ingest_document
 from .rag import search
 from .grounding import verify_grounding
 from .storage import get_sources, remove_source
+
+
+# ============================================================
+# ENVIRONMENT
+# ============================================================
+
+load_dotenv()
 
 
 # ============================================================
@@ -23,9 +35,37 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-OLLAMA_URL = "http://localhost:11434"
 
-LLM_MODEL = "llama3.2"
+OLLAMA_URL = os.getenv(
+    "OLLAMA_URL",
+    "http://localhost:11434"
+)
+
+LLM_MODEL = os.getenv(
+    "LLM_MODEL",
+    "llama3.2"
+)
+
+GEMINI_API_KEY = os.getenv(
+    "GEMINI_API_KEY",
+    ""
+)
+
+GEMINI_MODEL = os.getenv(
+    "GEMINI_MODEL",
+    "gemini-2.5-flash-lite"
+)
+
+
+# Gemini client is created only when a key exists.
+gemini_client = None
+
+if GEMINI_API_KEY:
+
+    gemini_client = genai.Client(
+        api_key=GEMINI_API_KEY
+    )
+
 
 ALLOWED_EXTENSIONS = {
     ".txt",
@@ -44,7 +84,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 app = FastAPI(
     title="Learnora",
     description="Evidence-grounded AI Learning Companion",
-    version="1.0.0"
+    version="1.1.0"
 )
 
 
@@ -57,7 +97,9 @@ app.add_middleware(
 
     allow_origins=[
         "http://localhost:5500",
-        "http://127.0.0.1:5500"
+        "http://127.0.0.1:5500",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
     ],
 
     allow_credentials=True,
@@ -93,7 +135,7 @@ def root():
     return {
         "name": "Learnora",
         "status": "running",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 
 
@@ -103,6 +145,8 @@ def root():
 
 @app.get("/health")
 def health():
+
+    ollama_running = False
 
     try:
 
@@ -121,9 +165,17 @@ def health():
 
 
     return {
+
         "status": "ok",
+
         "service": "Learnora",
-        "ollama": ollama_running
+
+        "ollama":
+            ollama_running,
+
+        "gemini":
+            bool(GEMINI_API_KEY)
+
     }
 
 
@@ -137,8 +189,13 @@ def sources():
     source_list = get_sources()
 
     return {
-        "sources": source_list,
-        "count": len(source_list)
+
+        "sources":
+            source_list,
+
+        "count":
+            len(source_list)
+
     }
 
 
@@ -147,10 +204,9 @@ def sources():
 # ============================================================
 
 @app.delete("/sources/{source_name}")
-def delete_source(source_name: str):
-
-    # Only allow the filename itself.
-    # This prevents path traversal.
+def delete_source(
+    source_name: str
+):
 
     safe_name = Path(
         source_name
@@ -160,8 +216,12 @@ def delete_source(source_name: str):
     if safe_name != source_name:
 
         return {
+
             "success": False,
-            "error": "Invalid source name."
+
+            "error":
+                "Invalid source name."
+
         }
 
 
@@ -173,12 +233,14 @@ def delete_source(source_name: str):
     if removed == 0:
 
         return {
+
             "success": False,
-            "error": "Source not found."
+
+            "error":
+                "Source not found."
+
         }
 
-
-    # Remove the original uploaded file
 
     file_path = (
         UPLOAD_DIR /
@@ -199,7 +261,8 @@ def delete_source(source_name: str):
 
     return {
 
-        "success": True,
+        "success":
+            True,
 
         "filename":
             safe_name,
@@ -219,25 +282,18 @@ async def upload(
     file: UploadFile = File(...)
 ):
 
-    # --------------------------------------------------------
-    # Validate filename
-    # --------------------------------------------------------
-
     if not file.filename:
 
         return {
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Invalid filename."
 
         }
 
-
-    # --------------------------------------------------------
-    # Validate extension
-    # --------------------------------------------------------
 
     extension = Path(
         file.filename
@@ -248,7 +304,8 @@ async def upload(
 
         return {
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Only TXT, Markdown, PDF and DOCX files are supported."
@@ -256,32 +313,21 @@ async def upload(
         }
 
 
-    # --------------------------------------------------------
-    # Read file
-    # --------------------------------------------------------
-
     content = await file.read()
 
-
-    # --------------------------------------------------------
-    # File size protection
-    # --------------------------------------------------------
 
     if len(content) > MAX_FILE_SIZE:
 
         return {
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "File size cannot exceed 10 MB."
 
         }
 
-
-    # --------------------------------------------------------
-    # Safe filename
-    # --------------------------------------------------------
 
     safe_name = re.sub(
 
@@ -300,10 +346,6 @@ async def upload(
     )
 
 
-    # --------------------------------------------------------
-    # Save file
-    # --------------------------------------------------------
-
     try:
 
         with open(
@@ -319,17 +361,14 @@ async def upload(
 
         return {
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Could not save the uploaded file."
 
         }
 
-
-    # --------------------------------------------------------
-    # Extract + chunk + embed + index
-    # --------------------------------------------------------
 
     try:
 
@@ -344,7 +383,8 @@ async def upload(
 
         return {
 
-            "success": True,
+            "success":
+                True,
 
             "filename":
                 safe_name,
@@ -362,7 +402,8 @@ async def upload(
 
         return {
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Could not process the document.",
@@ -545,6 +586,25 @@ def normalize_lesson(
         lesson = {}
 
 
+    detected_language = clean_string(
+        lesson.get(
+            "detected_language",
+            ""
+        )
+    )
+
+
+    if not detected_language:
+
+        if request.language.lower() == "auto":
+
+            detected_language = "English"
+
+        else:
+
+            detected_language = request.language
+
+
     normalized = {
 
         "topic":
@@ -572,12 +632,7 @@ def normalize_lesson(
             ),
 
         "detected_language":
-            clean_string(
-                lesson.get(
-                    "detected_language",
-                    request.language
-                )
-            ),
+            detected_language,
 
         "explanation":
             clean_string(
@@ -642,10 +697,10 @@ def normalize_lesson(
 
 
 # ============================================================
-# GENERATE LESSON
+# BUILD AI PROMPT
 # ============================================================
 
-def generate_lesson(
+def build_prompt(
     request,
     evidence
 ):
@@ -686,12 +741,10 @@ IMPORTANT RULES:
 9. Never fabricate citations.
 10. Every factual statement must be supported by the evidence.
 11. Do not make claims stronger than the evidence.
-12. If the user asks for "the best", "the most effective",
-    "the most important", or another ranking, do not invent
-    a ranking unless the evidence establishes it.
-13. If the evidence provides several useful facts but does not
-    establish a single best answer, explain the supported facts
-    and acknowledge the limitation.
+12. If the evidence does not establish a claim, do not state it as fact.
+13. If the evidence provides several facts but does not establish
+    a single best answer, explain the supported facts and acknowledge
+    the limitation.
 14. Examples must be based on the evidence.
 15. Real-world applications must be based on the evidence.
 16. Common mistakes must be based on the evidence.
@@ -702,9 +755,23 @@ LEARNING LEVEL:
 
 {request.level}
 
-LANGUAGE:
+LANGUAGE REQUEST:
 
 {request.language}
+
+LANGUAGE DETECTION:
+
+If LANGUAGE REQUEST is "auto", identify the language used by
+the user's question.
+
+Return the common English name of the detected language in
+"detected_language".
+
+If LANGUAGE REQUEST is not "auto", use the requested language
+name in "detected_language".
+
+Do not return null, None, empty string, or unknown when the
+language can reasonably be identified.
 
 COUNTRY / REGION:
 
@@ -717,7 +784,6 @@ USER QUESTION:
 EVIDENCE:
 
 {evidence_text}
-
 
 Return ONLY valid JSON.
 
@@ -738,6 +804,16 @@ Use exactly this structure:
 }}
 """
 
+    return prompt
+
+
+# ============================================================
+# GENERATE WITH OLLAMA
+# ============================================================
+
+def generate_with_ollama(
+    prompt
+):
 
     response = requests.post(
 
@@ -775,14 +851,100 @@ Use exactly this structure:
 
     try:
 
-        lesson = json.loads(
+        return json.loads(
             raw
         )
 
     except json.JSONDecodeError:
 
         raise ValueError(
-            "AI returned invalid JSON."
+            "Ollama returned invalid JSON."
+        )
+
+
+# ============================================================
+# GENERATE WITH GEMINI
+# ============================================================
+
+def generate_with_gemini(
+    prompt
+):
+
+    if gemini_client is None:
+
+        raise RuntimeError(
+            "GEMINI_API_KEY is not configured."
+        )
+
+
+    response = gemini_client.models.generate_content(
+
+        model=GEMINI_MODEL,
+
+        contents=prompt,
+
+        config=types.GenerateContentConfig(
+
+            response_mime_type="application/json"
+
+        )
+
+    )
+
+
+    raw = response.text
+
+
+    if not raw:
+
+        raise ValueError(
+            "Gemini returned an empty response."
+        )
+
+
+    try:
+
+        return json.loads(
+            raw
+        )
+
+    except json.JSONDecodeError:
+
+        raise ValueError(
+            "Gemini returned invalid JSON."
+        )
+
+
+# ============================================================
+# GENERATE LESSON
+# ============================================================
+
+def generate_lesson(
+    request,
+    evidence
+):
+
+    prompt = build_prompt(
+        request,
+        evidence
+    )
+
+
+    # --------------------------------------------------------
+    # Prefer Gemini when API key exists.
+    # Otherwise use local Ollama.
+    # --------------------------------------------------------
+
+    if gemini_client is not None:
+
+        lesson = generate_with_gemini(
+            prompt
+        )
+
+    else:
+
+        lesson = generate_with_ollama(
+            prompt
         )
 
 
@@ -801,6 +963,13 @@ def create_safe_refusal(
     reason
 ):
 
+    detected_language = (
+        "English"
+        if request.language.lower() == "auto"
+        else request.language
+    )
+
+
     return {
 
         "topic":
@@ -813,7 +982,7 @@ def create_safe_refusal(
             "Understanding",
 
         "detected_language":
-            request.language,
+            detected_language,
 
         "explanation":
             "I don't have enough verified information in the Learnora knowledge base to answer this confidently.",
@@ -831,7 +1000,7 @@ def create_safe_refusal(
             [],
 
         "practice_question":
-            "",
+            "Try explaining what information you would need to answer this question confidently.",
 
         "uncertainty_note":
             reason,
@@ -844,8 +1013,12 @@ def create_safe_refusal(
 
         "grounding":
             {
-                "verdict": "UNSUPPORTED",
-                "unsupported_claims": []
+                "verdict":
+                    "UNSUPPORTED",
+
+                "unsupported_claims":
+                    []
+
             }
 
     }
@@ -859,10 +1032,6 @@ def create_safe_refusal(
 def learn(
     request: LearnRequest
 ):
-
-    # --------------------------------------------------------
-    # Validate question
-    # --------------------------------------------------------
 
     if not request.topic.strip():
 
@@ -886,7 +1055,7 @@ def learn(
 
             top_k=5,
 
-            threshold=0.45
+            threshold=0.60
 
         )
 
@@ -1016,7 +1185,7 @@ def learn(
             "detected_language":
                 lesson.get(
                     "detected_language",
-                    request.language
+                    "English"
                 ),
 
             "explanation":
@@ -1035,7 +1204,7 @@ def learn(
                 [],
 
             "practice_question":
-                "",
+                "Try explaining what additional evidence would be needed.",
 
             "uncertainty_note":
                 "The available evidence was insufficient to verify this lesson.",
@@ -1117,7 +1286,6 @@ def learn(
             "supported by the retrieved source."
 
         )
-
 
     else:
 
