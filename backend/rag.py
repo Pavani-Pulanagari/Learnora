@@ -1,44 +1,41 @@
-import requests
+import os
 import numpy as np
+
+from google import genai
+from google.genai import types
 
 from .storage import load_index
 
 
-OLLAMA_URL = "http://localhost:11434"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-EMBEDDING_MODEL = "nomic-embed-text"
+if not GEMINI_API_KEY:
+    raise RuntimeError("GEMINI_API_KEY is not configured.")
+
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+EMBEDDING_MODEL = "gemini-embedding-001"
 
 
-def create_embedding(text):
-
-    response = requests.post(
-
-        f"{OLLAMA_URL}/api/embeddings",
-
-        json={
-            "model": EMBEDDING_MODEL,
-            "prompt": text
-        },
-
-        timeout=120
+def create_embedding(text, task_type="RETRIEVAL_QUERY"):
+    result = client.models.embed_content(
+        model=EMBEDDING_MODEL,
+        contents=text,
+        config=types.EmbedContentConfig(
+            task_type=task_type,
+            output_dimensionality=768
+        )
     )
 
-    response.raise_for_status()
-
-    return response.json()["embedding"]
+    return result.embeddings[0].values
 
 
 def cosine_similarity(a, b):
+    a = np.array(a, dtype=np.float32)
+    b = np.array(b, dtype=np.float32)
 
-    a = np.array(
-        a,
-        dtype=np.float32
-    )
-
-    b = np.array(
-        b,
-        dtype=np.float32
-    )
+    if len(a) != len(b):
+        return 0.0
 
     denominator = (
         np.linalg.norm(a)
@@ -51,8 +48,7 @@ def cosine_similarity(a, b):
 
     return float(
         np.dot(a, b)
-        /
-        denominator
+        / denominator
     )
 
 
@@ -61,20 +57,17 @@ def search(
     top_k=5,
     threshold=0.45
 ):
-
     index = load_index()
 
     if not index:
         return []
 
-
     query_embedding = create_embedding(
-        query
+        query,
+        "RETRIEVAL_QUERY"
     )
 
-
     results = []
-
 
     for item in index:
 
@@ -86,28 +79,15 @@ def search(
         if score >= threshold:
 
             results.append({
-
-                "score": round(
-                    score,
-                    4
-                ),
-
-                "source":
-                    item["source"],
-
-                "chunk_id":
-                    item["chunk_id"],
-
-                "text":
-                    item["text"]
-
+                "score": round(score, 4),
+                "source": item["source"],
+                "chunk_id": item["chunk_id"],
+                "text": item["text"]
             })
-
 
     results.sort(
         key=lambda x: x["score"],
         reverse=True
     )
-
 
     return results[:top_k]
