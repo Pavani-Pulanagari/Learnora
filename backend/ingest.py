@@ -123,7 +123,8 @@ def ingest_document(
     for number, chunk in enumerate(chunks):
 
         embedding = create_embedding(
-            chunk
+            chunk,
+            "RETRIEVAL_DOCUMENT"
         )
 
 
